@@ -1,0 +1,164 @@
+
+
+
+
+# install package
+```{r}
+
+install.packages("BiocManager") 
+BiocManager::install("EBImage")
+
+
+
+```
+
+
+# Read Image
+```{r}
+library(EBImage)
+Image1 <- readImage("C:/Users/Kemal/Desktop/pic1.jpg")
+Image2 <- readImage("C:/Users/Kemal/Desktop/pic2.jpg")
+print(Image1)
+
+
+display(Image1)  # fotografi gösterir
+```
+
+
+# Plot Data
+```{r}
+hist(Image2)
+
+
+```
+
+
+
+# Manipulatin Brightness
+```{r}
+
+a <- Image1 + 0.4
+print(a)
+display(a)
+
+
+b <- Image1 - 0.4
+print(a)
+display(a)
+
+```
+
+
+# Combine
+```{r}
+
+c <- combine(Image1, Image2)
+display(c)
+
+
+```
+# Put two picture into one
+```{r}
+d <- Image1 + Image2 / 4
+display(d)
+hist(d)
+
+```
+
+
+# Manipulating constrast
+```{r}
+e <- Image1*0.5
+display(e)
+f <- Image1*3
+display(f)
+
+```
+
+
+# Gamma Correction
+```{r}
+g <- Image1^0.5
+h <- Image1^3
+display(g)
+display(h)
+
+```
+
+# Color
+```{r}
+
+colorMode(Image1) <- Grayscale
+print(Image1)
+display(Image1)
+
+colorMode(Image1) <- Color #to return to color
+
+```
+
+
+# Cropping
+```{r}
+
+k <- Image1[700:300, 700:300,]
+display(k)
+```
+
+
+# New Image File
+```{r}
+
+writeImage(k, "rstudio_image.jpg")
+
+```
+
+
+# Flip, Flop, Rotate, Resize
+```{r}
+
+l <- flip(Image1)
+display(l)
+m <- rotate(Image1, 45)
+display(m)
+
+n <- flop(Image1)  # nesneleri sağdan sola ya da soldan sağa alır
+display(n)
+
+o <- resize(Image1, 400)
+display(o)
+
+```
+
+
+# Low pass filter
+```{r}
+
+low <- makeBrush(81, shape = "disc", step = FALSE)^2
+low <- low / sum(low)
+Image.low <- filter2(Image1, low)
+display(Image.low)
+
+
+```
+
+
+# High pass filter
+```{r}
+
+high <- matrix(1, nc = 3, nr = 3)
+high[2,2] <- -8
+Image.high <- filter2(Image1, high)
+display(Image.high)
+
+```
+
+
+# Combine
+```{r}
+
+new <- Image.high / 5 + Image1
+comb <- combine(Image1, new)
+display(comb)
+
+```
+

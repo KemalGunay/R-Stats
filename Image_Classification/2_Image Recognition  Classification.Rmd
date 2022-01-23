@@ -1,0 +1,232 @@
+
+
+
+
+
+```{r}
+
+# Load Packages
+# If you haven't install these pack. you must install first
+library(EBImage)
+library(keras) # keras package use Tensorflow
+
+```
+
+
+
+
+```{r}
+
+# Read Images
+setwd("C:/Users/Kemal/Desktop/veri_bilimi/R/Dr. Bharatenra Rai/image_processing/images")
+
+
+pics <- c('p1.jpg', 'p2.jpg', 'p3.jpg', 'p4.jpg', 'p5.jpg', 'p6.jpg',
+          'c1.jpg', 'c2.jpg', 'c3.jpg', 'c4.jpg', 'c5.jpg', 'c6.jpg')
+
+
+# we create an empty list 
+# And create a loop for reading all the photos at one time.
+mypic <- list()
+for (i in 1:12)  {mypic[[i]] <- readImage(pics[i])}
+
+
+```
+
+
+
+
+
+
+```{r}
+# Explore
+## Let's look at firt pic
+# Dim 281, 180, 3
+print(mypic[[1]])
+
+# Let's display the first pic
+display(mypic[[1]]) # this one is a plane
+
+
+display(mypic[[8]]) # this one is a car
+
+
+summary(mypic[[1]]) # Values min 0 and max is 1.0, and mean is 0.9283
+# all the pics are converting to numbers for classification
+
+
+# Plotting the last pic, which is a car
+hist(mypic[[12]]) 
+
+
+hist(mypic[[2]]) # second pic histogram
+
+
+# When we look at all the picture, they all come in different sizes. What we can do, we can resize all the pics in same dimensions
+str(mypic)
+
+```
+
+
+
+```{r}
+
+# Resize Image
+# Let's convert them by 28 and 28, smaller dimension than original sizes
+# When we check all photos size, we see all of them 28, 28, 3
+for (i in 1:12) {mypic[[i]] <- resize(mypic[[i]], 28, 28)}
+str(mypic)
+```
+
+
+
+```{r}
+# Reshape
+# we will convert single dimension as it below, 2352, KEEP IT IN YOUR MIND
+28 * 28 * 3
+
+# We will convert the matrices 28, 28, array_shape function comes from Keras
+for (i in 1:12) {mypic[[i]] <- array_reshape(mypic[[i]], c(28, 28,3))}
+str(mypic)
+
+```
+
+```{r}
+
+# Row Bind
+# x for independent variables, y for dependent variable
+# for training we will use first 5 for planes, 6 for testing
+# similarly we will use first 5 for cars, 6 for testing
+trainx <- NULL
+for (i in 1:5) {trainx <- rbind(trainx, mypic[[i]])}
+
+
+# When we check trainx, one row for each photos (5 photos), we see 2352 columns
+str(trainx)
+```
+
+
+```{r}
+
+
+
+for (i in 7:11) {trainx <- rbind(trainx, mypic[[i]])}
+testx <- rbind(mypic[[6]], mypic[[12]]) # mypic[[6]] for car, mypic[[12]] for plane
+
+
+# 0 --> Plane
+# 1 --> Car
+
+trainy <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+testy <- c(0,1)
+
+```
+
+
+
+
+
+```{r}
+# One Hot Encoding
+# to_categorical function comes from Keras
+trainLabels <- to_categorical(trainy)
+testLabels <- to_categorical(testy)
+
+
+
+# If we look at fist class for the plane, second class for the car
+trainLabels
+
+```
+
+
+
+
+```{r}
+# Model
+
+
+# we will use neural network, let's specify hidden layers units, it can be changed according to outcome
+# activation function we will use popular one, which is relu
+# we have to specify how many units or neurons in input layers, it was 2352
+# softmax activation function is commonly used
+model <- keras_model_sequential()
+model %>%
+  layer_dense(units = 256, activation = "relu", input_shape = c(2352)) %>%
+  layer_dense(units = 128, activation = "relu")  %>% # second hidden layer
+  layer_dense(units = 2, activation = "softmax")  # output layer has two values, 0 and 1
+
+
+
+summary(model)
+
+
+
+```
+
+
+```{r}
+
+# first hidden layer has 602368 parameters
+# if we calculate it manually
+# input is 2352 
+2352 * 256 # result will be 602112
+602112 + 256 # result is 602368
+
+
+# for second layer
+128 * 256  # result will be 32768
+32768 + 128 # result is 32896
+
+
+
+```
+
+
+```{r}
+# Compile
+# we use loss as binary, bcz our response variable has two values
+model %>%
+  compile(loss = "binary_crossentropy",
+          optimizer = optimizer_rmsprop(),
+          metrics = c("accuracy"))
+
+```
+
+
+
+
+
+
+```{r}
+# Fit Model
+history <-model %>%
+  fit(trainx,
+      trainLabels,
+      epochs = 30,
+      batch_size = 32,
+      validation_split = 0.2)
+
+```
+
+
+```{r}
+
+plot(history)
+
+```
+
+
+
+```{r}
+
+# Evaluation % Prediction - train data
+# Accuracy 0.90 , meaning we have 10 photos, 9 photos was identified correctly
+model %>% evaluate(trainx, trainLabels)
+pred <- model %>% predict_classes(trainx)
+table(Predicted = pred, Actual = trainy)
+prob <- model %>% predict_proba(trainx)
+cbind(prob, Prected = pred, Actual= trainy)
+
+```
+
